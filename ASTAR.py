@@ -1,6 +1,4 @@
 import heapq
-
-
 def a_star(graph, start):
     n = len(graph)
     pq = [(0, start, [start])]
@@ -14,16 +12,18 @@ def a_star(graph, start):
         if len(path) == n:
             cost = sum(
                 graph[path[i]][path[i + 1]]
-                for i in range(n -
-                               1)) + graph[path[-1]][start]  # back to start
+                for i in range(n - 1)
+            ) + graph[path[-1]][start]  # back to start
             if cost < min_cost:
                 min_cost = cost
                 best_path = path + [start]
             continue
 
         for neighbor in unvisited:
-            new_cost = graph[current][neighbor] + heuristic(
-                graph, current, start, unvisited - {neighbor})
+            new_cost = (
+                graph[current][neighbor]
+                + heuristic(graph, neighbor, start, unvisited - {neighbor})
+            )
             heapq.heappush(pq, (new_cost, neighbor, path + [neighbor]))
 
     return best_path, min_cost
@@ -38,8 +38,7 @@ def heuristic(graph, current, start, unvisited):
     mst_cost = minimum_spanning_tree(graph, unvisited)
 
     # Calculate the remaining cost from the current node to each unvisited city, including the start city
-    remaining_costs = [graph[current][city]
-                       for city in unvisited] + [graph[current][start]]
+    remaining_costs = [graph[current][city] for city in unvisited] + [graph[current][start]]
 
     # Estimate the remaining cost as the minimum of these costs
     remaining_cost = min(remaining_costs)
@@ -53,20 +52,21 @@ def minimum_spanning_tree(graph, unvisited):
     n = len(graph)
     visited = [False] * n
     min_cost = 0
-    priority_queue = [(0, 0)]  # (cost, node)
+    priority_queue = []
+
+    # Start from any node in the unvisited set
+    start_node = next(iter(unvisited))
+    priority_queue.append((0, start_node))
 
     while priority_queue:
-        cost, node = priority_queue.pop(0)
+        cost, node = heapq.heappop(priority_queue)
 
         if not visited[node]:
             min_cost += cost
             visited[node] = True
 
-            for neighbor, weight in enumerate(graph[node]):
-                if not visited[
-                        neighbor] and weight > 0 and neighbor in unvisited:
-                    priority_queue.append((weight, neighbor))
-
-            priority_queue.sort()
+            for neighbor in unvisited:
+                if not visited[neighbor] and graph[node][neighbor] > 0:
+                    heapq.heappush(priority_queue, (graph[node][neighbor], neighbor))
 
     return min_cost
